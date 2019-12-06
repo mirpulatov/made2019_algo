@@ -9,18 +9,57 @@
 #include <iostream>
 #include <stack>
 
+struct TreeNode {
+    TreeNode(int _value) : value(_value) {}
+    ~TreeNode(){
+        if(left != nullptr)
+            delete left;
+        if(right != nullptr)
+            delete right;
+    }
+    int value = 0;
+    TreeNode* parent = nullptr;
+    TreeNode* left = nullptr;
+    TreeNode* right = nullptr;
+};
+
+
+class Visit
+{
+public:
+    Visit(){};
+    void operator()(TreeNode *node)
+    {
+        std::stack<TreeNode*> one;
+        std::stack<TreeNode*> two;
+
+        one.push(node);
+        while(!one.empty())
+        {
+            TreeNode* node = one.top();
+            one.pop();
+            two.push(node);
+
+            if(node->left != nullptr)
+                one.push(node->left);
+
+            if(node->right != nullptr)
+                one.push(node->right);
+        }
+
+        while(!two.empty())
+        {
+            std::cout << two.top()->value << " ";
+            two.pop();
+        }
+    }
+};
+
 
 class Tree {
 private:
-    struct TreeNode {
-        explicit TreeNode(int _value) : value(_value) {}
 
-        int value = 0;
-        TreeNode* parent = nullptr;
-        TreeNode* left = nullptr;
-        TreeNode* right = nullptr;
-    };
-    Tree::TreeNode* root = nullptr;
+    TreeNode* root = nullptr;
 
 
 public:
@@ -28,13 +67,18 @@ public:
     {
         root = new TreeNode(0);
     }
+    ~Tree()
+    {
+        delete root;
+    }
+
     void set_root_value(int val);
 
     void Print(TreeNode* node) const;
 
     TreeNode* add_root(int value);
-
-    void post_order(int param) const;
+    template <class TVisitor>
+    void post_order(TVisitor visit) const;
 
     void insert(int value);
 
@@ -46,30 +90,13 @@ void Tree::set_root_value(int val)
     root->value = val;
 }
 // param = 1 - cout node; param = 0 - delete nodes
-void Tree::post_order(int param) const{
-    TreeNode* node = root;
-    std::stack<TreeNode*> stack;
-    TreeNode* visited_node;
-    while (!stack.empty() or node != nullptr){
-        if (node != nullptr) {
-            stack.push(node);
-            node = node->left;
-        } else {
-            TreeNode* top_node = stack.top();
-            if (top_node->right != nullptr and visited_node != top_node->right){
-                node = top_node->right;
-            } else {
-                if(param==1) std::cout << top_node->value << ' ';
-                visited_node = stack.top();
-                stack.pop();
-            }
-        }
-        if(param==0) delete node;
-    }
+template <class TVisitor>
+void Tree::post_order(TVisitor visit) const{
+    visit(root);
 }
 
 
-Tree::TreeNode* Tree::add_root(int value) {
+TreeNode* Tree::add_root(int value) {
     if (!root) {
         root = new TreeNode(value);
     }
@@ -78,28 +105,44 @@ Tree::TreeNode* Tree::add_root(int value) {
 
 
 void Tree::insert(int value) {
-    TreeNode* node;
-    node = new TreeNode(value);
-    while (root != nullptr) {
-        if (node->value >= root->value) {
-            if (root->right != nullptr) {
-                root = root->right;
-            } else {
-                node->parent = root;
-                root->right = node;
-                break;
+    TreeNode* newNode = new TreeNode( value );
+
+    if ( root == 0 )
+    {
+        root = newNode;
+        return;
+    }
+
+    TreeNode* nextNode = root;
+    while ( true )
+    {
+        if ( value < nextNode->value )
+        {
+            // Смотрим налево
+            if ( nextNode->left != 0 )
+            {
+                nextNode = nextNode->left;
             }
-        } else if (node->value < root->value) {
-            if (root->left != nullptr) {
-                root = root->left;
-            } else {
-                node->parent = root;
-                root->left = node;
-                break;
+            else
+            {
+                nextNode->left = newNode;
+                return;
             }
         }
-
-    }
+        else
+        {
+            // Смотрим направо
+            if ( nextNode->right != 0 )
+            {
+                nextNode = nextNode->right;
+            }
+            else
+            {
+                nextNode->right = newNode;
+                return;
+            }
+        }
+    };
 }
 
 
@@ -115,7 +158,7 @@ int main() {
         std::cin >> node_value;
         tree.insert(node_value);
     }
-
-    tree.post_order(1);
+    Visit visit;
+    tree.post_order(visit);
     return 0;
 }
