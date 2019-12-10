@@ -30,28 +30,7 @@ public:
     Visit(){};
     void operator()(TreeNode *node)
     {
-        std::stack<TreeNode*> one;
-        std::stack<TreeNode*> two;
-
-        one.push(node);
-        while(!one.empty())
-        {
-            TreeNode* node = one.top();
-            one.pop();
-            two.push(node);
-
-            if(node->left != nullptr)
-                one.push(node->left);
-
-            if(node->right != nullptr)
-                one.push(node->right);
-        }
-
-        while(!two.empty())
-        {
-            std::cout << two.top()->value << " ";
-            two.pop();
-        }
+        std::cout << node->value << " ";
     }
 };
 
@@ -92,7 +71,29 @@ void Tree::set_root_value(int val)
 // param = 1 - cout node; param = 0 - delete nodes
 template <class TVisitor>
 void Tree::post_order(TVisitor visit) const{
-    visit(root);
+
+    std::stack<TreeNode*> one;
+    std::stack<TreeNode*> two;
+
+    one.push(root);
+    while(!one.empty())
+    {
+        TreeNode* node = one.top();
+        one.pop();
+        two.push(node);
+
+        if(node->left != nullptr)
+            one.push(node->left);
+
+        if(node->right != nullptr)
+            one.push(node->right);
+    }
+
+    while(!two.empty())
+    {
+        visit(two.top());
+        two.pop();
+    }
 }
 
 
@@ -118,7 +119,6 @@ void Tree::insert(int value) {
     {
         if ( value < nextNode->value )
         {
-            // Смотрим налево
             if ( nextNode->left != 0 )
             {
                 nextNode = nextNode->left;
@@ -131,7 +131,6 @@ void Tree::insert(int value) {
         }
         else
         {
-            // Смотрим направо
             if ( nextNode->right != 0 )
             {
                 nextNode = nextNode->right;
