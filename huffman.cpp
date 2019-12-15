@@ -86,7 +86,7 @@ typedef struct node {
   long long quantity;
   byte value;
   vector<bool> code;
-  node() {
+  node(){
       left = nullptr;
       right = nullptr;
   }
@@ -94,9 +94,6 @@ typedef struct node {
     value = val;
     left = nullptr;
     right = nullptr;
-  }
-  bool operator<(const node &right)  const {
-    return quantity > right.quantity;
   }
 } node;
 
@@ -111,6 +108,14 @@ node* join_nodes(node* a, node* b) {
   res->left = a;
   res->right = b;
   return res;
+}
+
+void remove_node(node* a) {
+  if (a->left)
+    remove_node(a->left);
+  if (a->right)
+    remove_node(a->right);
+  delete a;
 }
 
 void encode_tree(node* root, vector<bool>& code, map<byte, vector<bool> > &revert) {
@@ -142,7 +147,7 @@ void Encode(IInputStream& original, IOutputStream& compressed) {
     res.push(new node(it->first, it->second));
   }
   
-  while(res.size() > 1) {
+  while (res.size() > 1) {
     node* now1 = res.top(); res.pop(); 
     node* now2 = res.top(); res.pop();
     res.push(join_nodes(now1, now2));
@@ -153,6 +158,7 @@ void Encode(IInputStream& original, IOutputStream& compressed) {
     map<byte, vector<bool> > revert;
   
     encode_tree(root, code, revert);
+    remove_node(root);
   
     unsigned int num_of_symbols = bin.size();
     compressed.Write((byte)(num_of_symbols));
@@ -161,7 +167,7 @@ void Encode(IInputStream& original, IOutputStream& compressed) {
     compressed.Write((byte)(num_of_symbols >> 24));
     
     compressed.Write((byte)(revert.size()-1));
-    for (auto it=revert.begin(); it != revert.end(); ++it) {
+    for (auto it = revert.begin(); it != revert.end(); ++it) {
         BitsWriter tmp;
         vector<bool> now = it->second;
         tmp.WriteByte(it->first);
@@ -175,7 +181,7 @@ void Encode(IInputStream& original, IOutputStream& compressed) {
     }
     BitsWriter bw;
     for (int i = 0; i < bin.size(); i++) {
-        for(int k = 0; k < revert[bin[i]].size(); k++)
+        for (int k = 0; k < revert[bin[i]].size(); k++)
             bw.WriteBit(revert[bin[i]][k]);
     }
     vector<unsigned char> result = bw.GetResult();
@@ -213,7 +219,7 @@ void Decode(IInputStream& compressed, IOutputStream& original) {
         }
         if (len % 8) {
             byte now; compressed.Read(now);
-            for (int j = 0; j < len%8; j++) {
+            for (int j  0; j < len%8; j++) {
                 code.push_back(now & 1);
                 now >>= 1;
             }
