@@ -23,14 +23,14 @@ struct Node {
     std::vector<int> indices;
 };
 
-bool equals(const std::shared_ptr<Node> &left, const std::shared_ptr<Node> &right)
+bool equals(const std::shared_ptr<Node>& left, const std::shared_ptr<Node>& right)
 {
-    if(left == right) {
+    if (left == right) {
         return true;
     }
-    if(left && right) {
+    if (left && right) {
         return std::tie(left->go, left->is_terminal, left->toParent, left->edges) ==
-               std::tie(right->go, right->is_terminal, right->toParent, right->edges);
+            std::tie(right->go, right->is_terminal, right->toParent, right->edges);
     }
     return false;
 }
@@ -46,18 +46,18 @@ public:
     ~Trie() = default;
 
     bool Add(const std::string& key, int index);
-    void Process(const std::string &text, const std::string &pattern);
+    std::vector <int> Process(const std::string& text, const std::string& pattern);
 
 private:
     std::shared_ptr<Node> root;
-    std::shared_ptr<Node> GetLink(const std::shared_ptr<Node> &v);
-    std::shared_ptr<Node> Go(const std::shared_ptr<Node> &v, const char symbol);
-    std::vector<std::pair<int, int> > GetPartitions(const std::string &pattern);
+    std::shared_ptr<Node> GetLink(const std::shared_ptr<Node>& v);
+    std::shared_ptr<Node> Go(const std::shared_ptr<Node>& v, const char symbol);
+    std::vector<std::pair<int, int> > GetPartitions(const std::string& pattern);
 
     static void print(const std::shared_ptr<Node>& node, const std::string& current);
 
     static std::pair<bool, bool> remove(
-            std::shared_ptr<Node>& node, const std::string& key, int current_index);
+        std::shared_ptr<Node>& node, const std::string& key, int current_index);
 };
 
 Trie::Trie() {
@@ -74,7 +74,8 @@ bool Trie::Add(const std::string& key, const int index) {
             tmp->toParent = symbol;
             tmp->link = nullptr;
             current = tmp;
-        } else {
+        }
+        else {
             current = next->second;
         }
     }
@@ -83,24 +84,26 @@ bool Trie::Add(const std::string& key, const int index) {
     return true;
 }
 
-std::shared_ptr<Node> Trie::GetLink(const std::shared_ptr<Node> &v) {
-    if(v->link == nullptr) {
-        if(equals(v, root) || equals(v->parent, root)) {
+std::shared_ptr<Node> Trie::GetLink(const std::shared_ptr<Node>& v) {
+    if (v->link == nullptr) {
+        if (equals(v, root) || equals(v->parent, root)) {
             v->link = root;
-        } else {
-            v->link = Go( GetLink(v->parent), v->toParent );
+        }
+        else {
+            v->link = Go(GetLink(v->parent), v->toParent);
         }
     }
     return v->link;
 }
 
-std::shared_ptr<Node> Trie::Go(const std::shared_ptr<Node> &v, const char symbol) {
+std::shared_ptr<Node> Trie::Go(const std::shared_ptr<Node>& v, const char symbol) {
     auto edge = v->edges.find(symbol);
-    if(edge == v->edges.end()) {
+    if (edge == v->edges.end()) {
         auto next = v->go.find(symbol);
-        if(next != v->go.end()) {
+        if (next != v->go.end()) {
             v->edges[symbol] = v->go[symbol];
-        } else {
+        }
+        else {
             v->edges[symbol] = equals(v, root) ? root : Go(GetLink(v), symbol);
         }
     }
@@ -108,7 +111,7 @@ std::shared_ptr<Node> Trie::Go(const std::shared_ptr<Node> &v, const char symbol
 }
 
 std::pair<bool, bool> Trie::remove(
-        std::shared_ptr<Node>& node, const std::string& key, int current_index) {
+    std::shared_ptr<Node>& node, const std::string& key, int current_index) {
     if (current_index == key.length()) {
         if (!node->is_terminal) return std::make_pair(false, false);
         node->is_terminal = false;
@@ -141,13 +144,13 @@ void Trie::print(const std::shared_ptr<Node>& node, const std::string& current) 
     }
 }
 
-std::vector<std::pair<int, int> > Trie::GetPartitions(const std::string &pattern) {
+std::vector<std::pair<int, int> > Trie::GetPartitions(const std::string& pattern) {
     std::vector<std::pair<int, int> > result;
     std::pair<int, int> now;
 
     if (pattern[0] != '?') {
         now.first = 0;
-        if(pattern[1] == '?') {
+        if (pattern[1] == '?') {
             now.second = 0;
             result.push_back(now);
         }
@@ -174,10 +177,10 @@ std::vector<std::pair<int, int> > Trie::GetPartitions(const std::string &pattern
     return result;
 }
 
-void Trie::Process(const std::string &text, const std::string &pattern) {
+std::vector <int> Trie::Process(const std::string& text, const std::string& pattern) {
     std::vector<std::pair<int, int> > partitions = GetPartitions(pattern);
     int index = 0;
-    for(auto p : partitions) {
+    for (auto p : partitions) {
         Add(pattern.substr(p.first, p.second - p.first + 1), index++);
     }
     std::vector<int> entries(text.length());
@@ -191,28 +194,31 @@ void Trie::Process(const std::string &text, const std::string &pattern) {
                 for (auto indice : u->indices) {
                     int startIndex = i - partitions[indice].second + partitions[indice].first;
 
-                    if ((startIndex - partitions[indice].first >= 0) &&  (startIndex - partitions[indice].first + pattern.length() - 1 < text.length())) {
+                    if ((startIndex - partitions[indice].first >= 0) && (startIndex - partitions[indice].first + pattern.length() - 1 < text.length())) {
                         entries[startIndex - partitions[indice].first]++;
                     }
                 }
             }
             u = GetLink(u);
-        } while ( !equals(u, root) );
+        } while (!equals(u, root));
     }
 
     std::vector<int> result;
-    for (int i = 0; i < int(entries.size()) - int(pattern.size())+1; i++) {
+    for (int i = 0; i < int(entries.size()) - int(pattern.size()) + 1; i++) {
         if (entries[i] == partitions.size()) {
             result.push_back(i);
-            std::cout << i << ' ';
+            // std::cout << i << ' ';
         }
     }
+    return result;
 }
 
 int main() {
     Trie trie;
+    std::vector <int> res;
     std::string pattern, s;
     std::cin >> pattern >> s;
-    trie.Process(s, pattern);
+    res = trie.Process(s, pattern);
+    for ()
     return 0;
 }
