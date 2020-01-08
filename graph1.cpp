@@ -1,4 +1,4 @@
-﻿/*
+/*
 * Дан неориентированный связный граф.
 * Требуется найти вес минимального остовного дерева в этом графе.
 * С помощью алгоритма Прима.
@@ -19,7 +19,7 @@ class Graph {
 public:
     int vertices_count;
 
-    vector<pair<int, int>>* adjList;
+    vector<pair<int, int>> *adjList;
 
     Graph(int vertices_count);
 
@@ -35,8 +35,8 @@ Graph::Graph(int vertices_count) {
     adjList = new vector<node>[vertices_count];
 }
 
-Graph::~Graph() {
-    delete[] adjList;
+Graph::~Graph(){
+    delete [] adjList;
 }
 
 void Graph::addNode(int src, int dest, int weight) {
@@ -45,39 +45,35 @@ void Graph::addNode(int src, int dest, int weight) {
 }
 
 void Graph::Prima() {
-    int mst_weight = 0;
-    vector<int> key(vertices_count, INF);
+    vector<int> d(vertices_count, INF);
     vector<int> p(vertices_count, -1);
     vector<bool> visited(vertices_count, false);
     set <pair<int, int>> prior_queue;
-
-    key[0] = 0;
+    int mst_weight = 0;
+    d[0] = 0;
     prior_queue.insert(make_pair(0, 0));
-
     for (int i = 0; i < vertices_count; ++i) {
         if (prior_queue.empty()) {
             cout << 0;
-            exit(0);
+            break;
         }
-
-        int weight = prior_queue.begin()->first;
+	int w = prior_queue.begin()->first;
         int v = prior_queue.begin()->second;
         prior_queue.erase(prior_queue.begin());
 
         visited[v] = true;
 
-        if (p[v] != -1) {
-            mst_weight += weight;
-        }
+        if (p[v] != -1)
+            mst_weight += w;
 
         for (int j = 0; j < adjList[v].size(); ++j) {
-            int u = adjList[v][j].first,
-                w = adjList[v][j].second;
-            if (!visited[u] && w < key[u]) {
-                prior_queue.erase(make_pair(key[u], u));
-                key[u] = w;
-                p[u] = v;
-                prior_queue.insert(make_pair(key[u], u));
+            int to = adjList[v][j].first,
+                cost = adjList[v][j].second;
+            if (!visited[to] && cost < d[to] ) {
+                prior_queue.erase(make_pair(d[to], to));
+                d[to] = cost;
+                p[to] = v;
+                prior_queue.insert(make_pair(d[to], to));
             }
         }
     }
