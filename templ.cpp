@@ -219,6 +219,8 @@ int main() {
     std::string pattern, s;
     std::cin >> pattern >> s;
     res = trie.Process(s, pattern);
-    for ()
+    for (int i = 0; i < res.size(); i++) {
+    std::cout << res[i] << ' ';
+    }
     return 0;
 }
